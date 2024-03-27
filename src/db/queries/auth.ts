@@ -7,7 +7,8 @@ export async function createUser(values: InsertUser) {
 }
 
 export async function getUserByAuthId(authId: string) {
-  return await db.query.users.findFirst({
+  const user = await db.query.users.findFirst({
     where: eq(users.authId, authId),
   });
+  return user;
 }

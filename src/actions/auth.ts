@@ -3,26 +3,27 @@
 import { createUser, getUserByAuthId } from "@/db/queries/auth";
 import { createSupabaseServerClient } from "@/db/supabase/server";
 import { SignInForm, SignUpForm } from "@/lib/zod-schemas/auth";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function getUser() {
-  const authUser = await getAuthUser();
+  const supabase = createSupabaseServerClient();
+  const authUser = (await supabase.auth.getUser()).data.user;
 
   if (!authUser) return null;
 
-  return await getUserByAuthId(authUser.id);
-}
+  const user = await getUserByAuthId(authUser.id);
+  if (!user) return null;
 
-export async function getAuthUser() {
-  const supabase = createSupabaseServerClient();
-  return (await supabase.auth.getUser()).data.user;
+  return user;
 }
 
 export async function signOutUser() {
   const supabase = createSupabaseServerClient();
 
-  const { error } = await supabase.auth.signOut();
+  await supabase.auth.signOut();
 
-  return { success: !!error, errorMessage: error?.message };
+  redirect("/");
 }
 
 export async function signInUser(signInForm: SignInForm) {
